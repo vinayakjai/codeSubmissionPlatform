@@ -1,31 +1,42 @@
-const express=require('express');
-
-const { PORT } = require('./config/serverConfig');
+//importing builtin packages
+const express = require("express");
 
 //importing middleawares
-const bodyParser=require('body-parser');
-const apiRouter = require('./routes');
+const bodyParser = require("body-parser");
+const apiRouter = require("./routes");
 
-const app=express();
+//importing custom packages
+const { PORT } = require("./config/serverConfig");
+
+const errorHandler = require("./utils/errorHandler");
+const { connectToDatabase } = require("./config/dbDriver");
+
+
+const app = express();
 
 //initializing middlewares
 
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.text());
 app.use(bodyParser.json());
 
 
-//enabling routing
-app.use('/api',apiRouter);
+//connecting to db
+app.listen(PORT, async (req, res, next) => {
+  await connectToDatabase();
+});
 
+
+//enabling routing
+app.use("/api", apiRouter);
 
 //dummy pin request to chk wheter routiing is working properly or not,
-app.get('/ping',(req,res)=>{
-    return res.json({
-        msg:'pong',
-    })
-})
+app.get("/ping", (req, res) => {
+  return res.json({
+    msg: "pong",
+  });
+});
 
-app.listen(PORT,()=>{
-    console.log(`server is listning at port ${PORT}`);
-})
+
+//custom error middleware
+app.use(errorHandler);
